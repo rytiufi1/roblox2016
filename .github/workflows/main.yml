@@ -1,0 +1,59 @@
+name: Build Roblox 2016 (Windows)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2019 # Required for VS2019 support
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Install VS2015 Build Tools (v140)
+      run: |
+        # Installs the legacy v140 toolset required by the project
+        choco install visualstudio2015buildtools --version 14.0.25420.1
+
+    - name: Build Boost
+      shell: cmd
+      run: |
+        cd Library\boost
+        call bootstrap.bat
+        :: Note: Ensure build_boost.bat has internal paths corrected or relative
+        call build_boost.bat
+
+    - name: Configure and Build Qt 4.8.5
+      shell: cmd
+      run: |
+        # Adding SDK to path as requested in README for 'rc' error
+        set PATH=%PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86
+        
+        cd Library\Qt
+        # Using the configuration string from your README
+        # Note: %CD% is used to provide the absolute path dynamically
+        configure -make nmake -platform win32-msvc2015 -prefix %CD% -opensource -confirm-license -opengl desktop -nomake examples -nomake tests -webkit -xmlpatterns
+        
+        nmake
+
+    - name: Build Roblox Solution
+      shell: cmd
+      run: |
+        # Building the main solution using MSBuild
+        msbuild Roblox.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v140_xp
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Roblox2016-Windows-Client
+        path: |
+          Win/Release/
+          WindowsClient/Release/
