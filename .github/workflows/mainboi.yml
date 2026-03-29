@@ -9,9 +9,11 @@ jobs:
       
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
+        
+      - name: Install v140 Toolset (VS2015)
+        run: |
+          choco install visualstudio2019-workload-vctools --package-parameters "--add Microsoft.VisualStudio.Component.VC.140" -y
 
-      - name: Install VS2015 Build Tools
-        run: choco install visualstudio2015buildtools --version 14.0.25420.1 -y
 
       - name: Build
         run: |
