@@ -1,0 +1,19 @@
+name: Build Roblox 2016
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest # Changed from windows-2019
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install VS2015 Build Tools
+        run: choco install visualstudio2015buildtools --version 14.0.25420.1 -y
+
+      - name: Build
+        run: |
+          # Add your build commands here
+          echo "Starting build..."
